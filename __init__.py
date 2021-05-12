@@ -1,7 +1,5 @@
-import aqt
-# from aqt.utils import showInfo, qconnect
-# from aqt.qt import *
-import requests
+import aqt # for anki modules
+import requests # for making requests to airtable
 
 
 def queryStatsFunction() -> None:
@@ -9,20 +7,23 @@ def queryStatsFunction() -> None:
     # retrieve config
     # =====================
     config = aqt.mw.addonManager.getConfig(__name__)
-    airtable_url_base = config['airtable_url_base']
-    airtable_view = config['airtable_view']
-    airtable_api_key = config['airtable_api_key']
+    airtable_url_base = config['airtable_url_base'] # looks like this: https://api.airtable.com/v0/appW777gjbRzAB60s/Stats
+    # airtable_view = config['airtable_view'] # looks like this: Grid%20view
+    airtable_api_key = config['airtable_api_key'] # should be in airtable account info
 
 
     # list airtable records
     # =====================
-    url_complete = f'{airtable_url_base}?view={airtable_view}'
+    # url_complete = f'{airtable_url_base}?view={airtable_view}'
+    url_complete = airtable_url_base
+    headers = {'Authorization': f'Bearer {airtable_api_key}'}
 
     print(f'querying: {url_complete}')
-    response = requests.get(url_complete, headers={'Authorization': f'Bearer {airtable_api_key}'})
+    response = requests.get(url_complete, headers=headers)
     if response.status_code != 200:
         error_message = f'received error while querying {url_complete}: {response.content} status code: {response.status_code}'
-        aqt.utils.showError(error_message)
+        aqt.utils.showCritical(error_message)
+        return
     
     # we need to get the record id of airtable records, so we can update them
     record_id_map = {}
@@ -31,23 +32,37 @@ def queryStatsFunction() -> None:
         record_id_map[record['fields']['Name']] = record['id']
 
     print(record_id_map)
-    
 
-    results = []
+    # collect data
+    # ============
 
+    update_records = []
     for flag_id in range(0, 4):
         id_list = aqt.mw.col.find_cards(f'flag:{flag_id}')
-        if len(id_list) > 0:
-            results.append(f'flag {flag_id}: {len(id_list)} cards')
+        field_name = f'flag {flag_id}'
+        record_id = record_id_map[field_name]
+        update_records.append({
+            'id': record_id,
+            'fields': {
+                'Count': len(id_list)
+            }
+        })
 
-    # insert API call to Todoist here
+    # update airtable
+    # ===============
 
-    # show a message box
-    aqt.utils.showInfo('\n'.join(results))
+    update_data = {'records': update_records}
+    print(update_data)
+    response = requests.patch(airtable_url_base, json=update_data, headers=headers )
+    if response.status_code != 200:
+        error_message = f'received error while updating records: {airtable_url_base}: {response.content} status code: {response.status_code}'
+        aqt.utils.showCritical(error_message)
+        return
 
-# create a new menu item, "test"
-action = aqt.qt.QAction("Query Stats", aqt.mw)
-# set it to call testFunction when it's clicked
+
+
+action = aqt.qt.QAction("Update Stats on Airtable", aqt.mw)
+# call the queryStatsFunction when triggered
 aqt.utils.qconnect(action.triggered, queryStatsFunction)
 # and add it to the tools menu
 aqt.mw.form.menuTools.addAction(action)
