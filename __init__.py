@@ -10,6 +10,9 @@ def queryStatsFunction() -> None:
     airtable_url = config['airtable_url_base'] # looks like this: https://api.airtable.com/v0/appW777gjbRzAB60s/Stats
     airtable_api_key = config['airtable_api_key'] # should be in airtable account info
 
+    if len(airtable_url) == 0 or len(airtable_api_key) == 0:
+        aqt.utils.showCritical('You must specify Airtable URL and API Key in the config')
+        return
 
     # list airtable records
     # =====================
@@ -72,3 +75,8 @@ action = aqt.qt.QAction("Update Stats on Airtable", aqt.mw)
 aqt.utils.qconnect(action.triggered, queryStatsFunction)
 # and add it to the tools menu
 aqt.mw.form.menuTools.addAction(action)
+
+# run this function on anki main window open
+aqt.gui_hooks.main_window_did_init.append(queryStatsFunction)
+# run this function after sync finish
+aqt.gui_hooks.sync_did_finish.append(queryStatsFunction)
