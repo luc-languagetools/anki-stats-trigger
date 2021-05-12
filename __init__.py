@@ -62,6 +62,7 @@ def queryStatsFunction() -> None:
 
     update_data = {'records': update_records}
     print(update_data)
+    print(f'calling url: {airtable_url}')
     response = requests.patch(airtable_url, json=update_data, headers=headers )
     if response.status_code != 200:
         error_message = f'received error while updating records: {airtable_url}: {response.content} status code: {response.status_code}'
