@@ -32,6 +32,7 @@ def queryStatsFunction() -> None:
     # collect data
     # ============
 
+    # count card in each flag
     update_records = []
     for flag_id in range(0, 4):
         id_list = aqt.mw.col.find_cards(f'flag:{flag_id}')
@@ -43,6 +44,15 @@ def queryStatsFunction() -> None:
                 'Count': len(id_list)
             }
         })
+    # count suspended
+    id_list = aqt.mw.col.find_cards('is:suspended')
+    record_id = record_id_map['suspended']
+    update_records.append({
+        'id': record_id,
+        'fields': {
+            'Count': len(id_list)
+        }
+    })    
 
     # update airtable
     # ===============
