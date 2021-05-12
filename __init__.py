@@ -7,21 +7,17 @@ def queryStatsFunction() -> None:
     # retrieve config
     # =====================
     config = aqt.mw.addonManager.getConfig(__name__)
-    airtable_url_base = config['airtable_url_base'] # looks like this: https://api.airtable.com/v0/appW777gjbRzAB60s/Stats
-    # airtable_view = config['airtable_view'] # looks like this: Grid%20view
+    airtable_url = config['airtable_url_base'] # looks like this: https://api.airtable.com/v0/appW777gjbRzAB60s/Stats
     airtable_api_key = config['airtable_api_key'] # should be in airtable account info
 
 
     # list airtable records
     # =====================
-    # url_complete = f'{airtable_url_base}?view={airtable_view}'
-    url_complete = airtable_url_base
     headers = {'Authorization': f'Bearer {airtable_api_key}'}
 
-    print(f'querying: {url_complete}')
-    response = requests.get(url_complete, headers=headers)
+    response = requests.get(airtable_url, headers=headers)
     if response.status_code != 200:
-        error_message = f'received error while querying {url_complete}: {response.content} status code: {response.status_code}'
+        error_message = f'received error while querying {airtable_url}: {response.content} status code: {response.status_code}'
         aqt.utils.showCritical(error_message)
         return
     
@@ -53,9 +49,9 @@ def queryStatsFunction() -> None:
 
     update_data = {'records': update_records}
     print(update_data)
-    response = requests.patch(airtable_url_base, json=update_data, headers=headers )
+    response = requests.patch(airtable_url, json=update_data, headers=headers )
     if response.status_code != 200:
-        error_message = f'received error while updating records: {airtable_url_base}: {response.content} status code: {response.status_code}'
+        error_message = f'received error while updating records: {airtable_url}: {response.content} status code: {response.status_code}'
         aqt.utils.showCritical(error_message)
         return
 
